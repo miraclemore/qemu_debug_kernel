@@ -1,0 +1,60 @@
+#!/bin/bash
+
+# source directories
+LINUX=linux
+BUSYBOX=busybox
+ARCH=arm64
+
+# setting up linux source tree
+
+if [ ! -d $LINUX ]
+then
+	read -p "Linux source doesn't exist, git clone it from kernel.org? [y/N] " REPLY
+
+	case $REPLY in
+		y | Y)
+			git clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git $LINUX
+			;;
+		*)
+			echo "So, please prepare linux source(in a directory named $LINUX) by yourself."
+			exit 1
+			;;
+	esac
+fi
+
+make ARCH=$ARCH -C $LINUX defconfig
+
+#${LINUX}/scripts/config --file ${LINUX}/.config --enable CONFIG_EXPERIMENTAL
+#${LINUX}/scripts/config --file ${LINUX}/.config --enable CONFIG_DEBUG_INFO
+#${LINUX}/scripts/config --file ${LINUX}/.config --enable CONFIG_KGDB
+#${LINUX}/scripts/config --file ${LINUX}/.config --enable CONFIG_KGDB_SERIAL_CONSOLE
+#${LINUX}/scripts/config --file ${LINUX}/.config --disable CONFIG_DEBUG_RODATA
+
+#yes "" | make ARCH=$ARCH -C $LINUX oldconfig
+
+# setting up busybox source tree
+
+if [ ! -d $BUSYBOX ]
+then
+	read -p "Busybox source doesn't exist, git clone it from busybox.net? [y/N] " REPLY
+
+	case $REPLY in
+		y | Y)
+			git clone git://git.busybox.net/busybox $BUSYBOX
+			;;
+		*)
+			echo "So, please prepare busybox source(in a directory named $BUSYBOX) by yourself."
+			exit 1
+			;;
+	esac
+fi
+
+
+make ARCH=$ARCH -C $BUSYBOX defconfig
+
+${LINUX}/scripts/config --file ${BUSYBOX}/.config --enable CONFIG_STATIC
+${LINUX}/scripts/config --file ${BUSYBOX}/.config --enable CONFIG_INSTALL_NO_USR
+${LINUX}/scripts/config --file ${BUSYBOX}/.config --disable CONFIG_INETD
+${LINUX}/scripts/config --file ${BUSYBOX}/.config --disable CONFIG_FEATURE_MOUNT_NFS
+
+yes "" | make ARCH=$ARCH -C $BUSYBOX oldconfig
